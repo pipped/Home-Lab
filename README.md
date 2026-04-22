@@ -1,14 +1,73 @@
-# Home-Lab
-Personal Homelab
-//My home lab is a virtualized network environment designed for testing, development, and system administration practice. The lab runs on a physical Hyper-V host named "The Thinker", connected to my home network via a Spectrum modem/router. The Hyper-V environment hosts a pfSense virtual firewall that segments the network into a dedicated lab subnet (192.168.100.0/24) using an internal virtual switch.
+# Home Lab Infrastructure
 
-The pfSense firewall routes traffic between the lab subnet and the external home network (192.168.1.0/24), allowing for NAT, DHCP, and firewall rule customization. The lab network includes:
+Enterprise-style personal lab environment built for hands-on learning in networking, systems administration, virtualization, cybersecurity, and infrastructure management.
 
-A Windows Server 2019 VM (192.168.100.101) for Active Directory, DNS, and domain services.
+## Overview
 
-A Docker container host (192.168.100.102) running lightweight services and tools such as Portainer and Pi-hole.
+This home lab is hosted on a physical Hyper-V server named **The Thinker** and connected to a residential network through a Spectrum modem/router. A virtualized **pfSense firewall** provides network segmentation, routing, NAT, DHCP, and security controls for a dedicated internal lab environment.
 
-A Linux (Ubuntu) VM (192.168.100.103) used for scripting, SSH management, and testing open-source applications.
+The lab is isolated from the primary home network, allowing safe testing, realistic enterprise simulations, and deployment of infrastructure services.
 
-The entire setup is isolated from the home network, enabling realistic enterprise simulations and secure experimentation with network configurations, firewalls, and server deployments
-//
+## Network Architecture
+
+* Home Network: `192.168.1.0/24`
+* Lab Network: `192.168.100.0/24`
+* Virtual Firewall: pfSense
+* Hypervisor: Microsoft Hyper-V
+
+## Infrastructure Components
+
+### Windows Server 2019 VM
+
+* Active Directory Domain Services
+* DNS management
+* User/account administration
+* Group policy practice
+
+### Docker Host
+
+* Portainer container management
+* Pi-hole DNS filtering
+* Lightweight self-hosted services
+
+### Ubuntu Linux VM
+
+* SSH administration
+* Bash scripting
+* Linux system management
+* Open-source software testing
+
+## Skills Demonstrated
+
+* Network segmentation and subnetting
+* Firewall configuration and access control
+* Virtualization with Hyper-V
+* Windows Server administration
+* Linux administration
+* Docker container deployment
+* DNS and directory services
+* Troubleshooting and system maintenance
+
+## Purpose
+
+This environment is used to build real-world IT skills through practical experience in:
+
+* Enterprise networking concepts
+* Infrastructure deployment
+* Security hardening
+* Server management
+* Automation and scripting
+* Troubleshooting scenarios
+
+## Future Enhancements
+
+* VLAN implementation
+* VPN remote access
+* Centralized logging / SIEM
+* Monitoring with Grafana or Zabbix
+* Automated backups
+* Additional Windows/Linux servers
+
+## Author
+
+Built and maintained by pipped as a continuous learning platform for IT and network engineering development.
