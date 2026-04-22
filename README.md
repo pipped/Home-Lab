@@ -1,73 +1,105 @@
-# Home Lab Infrastructure
+# Home Lab - Docker Learning Environment
 
-Enterprise-style personal lab environment built for hands-on learning in networking, systems administration, virtualization, cybersecurity, and infrastructure management.
+A small Docker-based home lab for learning container basics, DNS filtering, metrics collection, and dashboards.
 
-## Overview
+## Quick Start
 
-This home lab is hosted on a physical Hyper-V server named **The Thinker** and connected to a residential network through a Spectrum modem/router. A virtualized **pfSense firewall** provides network segmentation, routing, NAT, DHCP, and security controls for a dedicated internal lab environment.
+```bash
+# 1. Copy the environment template
+cp .env.example .env
 
-The lab is isolated from the primary home network, allowing safe testing, realistic enterprise simulations, and deployment of infrastructure services.
+# 2. Start the lab
+docker compose -f docker/docker-compose.yml up -d
+```
 
-## Network Architecture
+Access the services:
 
-* Home Network: `192.168.1.0/24`
-* Lab Network: `192.168.100.0/24`
-* Virtual Firewall: pfSense
-* Hypervisor: Microsoft Hyper-V
+- Portainer: `http://localhost:9000`
+- Grafana: `http://localhost:3000`
+- Prometheus: `http://localhost:9090`
+- Pi-hole: `http://localhost/admin`
 
-## Infrastructure Components
+## What's Included
 
-### Windows Server 2019 VM
+- Portainer: Docker container management UI
+- Pi-hole: DNS-based ad blocking and query visibility
+- Prometheus: Metrics collection and storage
+- Grafana: Dashboards and visualization
 
-* Active Directory Domain Services
-* DNS management
-* User/account administration
-* Group policy practice
+## Credentials
 
-### Docker Host
+- Grafana: `admin` / `GF_SECURITY_ADMIN_PASSWORD` from `.env`
+- Pi-hole: `admin` / `PIHOLE_PASSWORD` from `.env`
+- Portainer: set an admin password on first login
 
-* Portainer container management
-* Pi-hole DNS filtering
-* Lightweight self-hosted services
+## Current State
 
-### Ubuntu Linux VM
+This repo currently provisions:
 
-* SSH administration
-* Bash scripting
-* Linux system management
-* Open-source software testing
+- a working Docker Compose stack in `docker/docker-compose.yml`
+- a Prometheus datasource in Grafana
+- a starter Grafana dashboard at `Home Lab -> Home Lab Overview`
 
-## Skills Demonstrated
+Known limitations:
 
-* Network segmentation and subnetting
-* Firewall configuration and access control
-* Virtualization with Hyper-V
-* Windows Server administration
-* Linux administration
-* Docker container deployment
-* DNS and directory services
-* Troubleshooting and system maintenance
+- Pi-hole v6 no longer exposes the old unauthenticated `/admin/api.php` endpoint, so Pi-hole metrics are not scraped directly by Prometheus in this repo
+- the `docker` and `node` Prometheus jobs are placeholders until exporters are added
 
-## Purpose
+More detail: [docs/STATUS.md](docs/STATUS.md)
 
-This environment is used to build real-world IT skills through practical experience in:
+## Useful Commands
 
-* Enterprise networking concepts
-* Infrastructure deployment
-* Security hardening
-* Server management
-* Automation and scripting
-* Troubleshooting scenarios
+```bash
+# Start everything
+docker compose -f docker/docker-compose.yml up -d
 
-## Future Enhancements
+# Check status
+docker compose -f docker/docker-compose.yml ps
 
-* VLAN implementation
-* VPN remote access
-* Centralized logging / SIEM
-* Monitoring with Grafana or Zabbix
-* Automated backups
-* Additional Windows/Linux servers
+# View logs
+docker compose -f docker/docker-compose.yml logs -f
 
-## Author
+# Restart one service
+docker compose -f docker/docker-compose.yml restart grafana
 
-Built and maintained by pipped as a continuous learning platform for IT and network engineering development.
+# Stop everything
+docker compose -f docker/docker-compose.yml down
+```
+
+## Repository Layout
+
+```text
+Home-Lab/
+|- docker/
+|  \- docker-compose.yml
+|- configs/
+|  |- prometheus.yml
+|  \- grafana/
+|- docs/
+|  |- SETUP.md
+|  |- SERVICES.md
+|  |- QUICK_REFERENCE.md
+|  |- TROUBLESHOOTING.md
+|  \- STATUS.md
+|- network/
+|  \- ARCHITECTURE.md
+|- .env.example
+|- .gitignore
+\- README.md
+```
+
+## Documentation
+
+- [docs/SETUP.md](docs/SETUP.md): setup walkthrough
+- [docs/SERVICES.md](docs/SERVICES.md): what each service does
+- [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md): common commands
+- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md): common problems and fixes
+- [docs/STATUS.md](docs/STATUS.md): current monitoring and dashboard status
+- [network/ARCHITECTURE.md](network/ARCHITECTURE.md): service relationships
+
+## Next Steps
+
+- Explore Portainer to see the containers and volumes
+- Open Prometheus and run the `up` query
+- Open Grafana and view `Home Lab Overview`
+- Add exporters if you want host, Docker, or Pi-hole metrics beyond the starter setup

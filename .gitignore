@@ -1,0 +1,23 @@
+# Environment Variables (contains passwords!)
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log
+
+# Don't commit big files
+*.iso
+*.vmdk
+*.vhd
+
