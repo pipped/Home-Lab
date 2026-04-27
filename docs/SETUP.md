@@ -3,32 +3,41 @@
 ## What You'll Learn
 
 This lab teaches you about:
-- **Docker**: Running applications in containers
-- **DNS**: How domain names work (Pi-hole)
-- **Metrics**: Monitoring system health (Prometheus)
-- **Dashboards**: Visualizing data (Grafana)
+
+- **Docker**: running applications in containers
+- **DNS**: how domain names work with Pi-hole
+- **Metrics**: collecting system health data with Prometheus
+- **Dashboards**: visualizing data with Grafana
+- **Exporters**: sending host and container metrics into Prometheus
 
 ## Prerequisites
 
 - Docker installed ([Download here](https://www.docker.com/products/docker-desktop))
-- Docker Compose (included with Docker Desktop)
-- ~4GB RAM available
-- Terminal/PowerShell access
+- Docker Compose, included with Docker Desktop
+- Around 4 GB RAM available
+- Terminal or PowerShell access
 
-## Installation (5 minutes)
+## Installation
 
-### Step 1: Copy Environment File
+### Step 1: Open The Project
+
 ```bash
 cd Home-Lab/
+```
+
+### Step 2: Copy Environment File
+
+```bash
 cp .env.example .env
 ```
 
-### Step 2: Start Docker Services
+### Step 3: Start Docker Services
+
 ```bash
 docker compose -f docker/docker-compose.yml up -d
 ```
 
-That's it! Your services are running.
+That's it. Your services are running.
 
 ## Access Your Services
 
@@ -40,41 +49,83 @@ Open these URLs in your browser:
 | **Pi-hole** (block ads) | http://localhost/admin | Password: `PIHOLE_PASSWORD` from `.env` |
 | **Prometheus** (see metrics) | http://localhost:9090 | No login needed |
 | **Grafana** (make charts) | http://localhost:3000 | admin / `GF_SECURITY_ADMIN_PASSWORD` from `.env` |
+| **cAdvisor** (container metrics) | http://localhost:8080 | No login needed |
+
+Node Exporter is scraped internally by Prometheus at `node-exporter:9100`, so it does not expose a browser UI by default.
 
 ## First-Time Setup
 
-### Change Passwords!
-These are default passwords - change them:
+### Change Passwords
 
-**Pi-hole**:
+These are default passwords. Change them after the first run.
+
+**Pi-hole**
+
 1. Go to http://localhost/admin
-2. Settings → Change Password
+2. Open Settings
+3. Change the password
 
-**Grafana**:
+**Grafana**
+
 1. Go to http://localhost:3000
-2. Click profile icon → Change password
+2. Open your profile
+3. Change the password
 
-## Understanding the Services
+## Understanding The Services
 
-### 🐳 Portainer
+### Portainer
+
 - **What**: Container management dashboard
 - **Why**: Visual way to see and manage your containers
 - **Learn**: Container lifecycle, images, volumes
 
-### 🔒 Pi-hole
+### Pi-hole
+
 - **What**: DNS-level ad blocker
-- **Why**: Blocks ads network-wide, protects privacy
-- **Learn**: How DNS works, ad blocking
+- **Why**: Blocks ads network-wide and improves query visibility
+- **Learn**: DNS, blocklists, allowlists, local network filtering
 
-### 📊 Prometheus
+### Prometheus
+
 - **What**: Metrics database
-- **Why**: Collects data about how services are performing
-- **Learn**: Time-series data, monitoring
+- **Why**: Collects time-series data from services and exporters
+- **Learn**: Scrape targets, PromQL, monitoring basics
 
-### 📈 Grafana
+### Grafana
+
 - **What**: Dashboard and visualization tool
-- **Why**: Makes Prometheus data pretty and useful
-- **Learn**: Data visualization, creating alerts
+- **Why**: Turns Prometheus data into charts and panels
+- **Learn**: Dashboards, panels, queries, alerts
+
+### Node Exporter
+
+- **What**: Host metrics exporter
+- **Why**: Gives Prometheus CPU, memory, disk, filesystem, and network data
+- **Learn**: Host monitoring
+
+### cAdvisor
+
+- **What**: Container metrics exporter and UI
+- **Why**: Gives Prometheus per-container CPU, memory, filesystem, and network data
+- **Learn**: Container monitoring
+
+## First Metrics To Try
+
+Open Prometheus at http://localhost:9090 and try:
+
+```promql
+up
+```
+
+```promql
+node_uname_info
+```
+
+```promql
+container_memory_usage_bytes
+```
+
+Then open Grafana at http://localhost:3000 and view `Dashboards -> Home Lab -> Home Lab Overview`.
 
 ## Common Commands
 
@@ -83,8 +134,9 @@ These are default passwords - change them:
 docker compose -f docker/docker-compose.yml ps
 
 # View logs for a service
-docker compose -f docker/docker-compose.yml logs pihole        # see Pi-hole logs
-docker compose -f docker/docker-compose.yml logs grafana       # see Grafana logs
+docker compose -f docker/docker-compose.yml logs pihole
+docker compose -f docker/docker-compose.yml logs grafana
+docker compose -f docker/docker-compose.yml logs prometheus
 
 # Restart a service
 docker compose -f docker/docker-compose.yml restart pihole
@@ -101,7 +153,8 @@ docker stats
 
 ## Troubleshooting
 
-### Can't access services?
+### Can't Access Services?
+
 ```bash
 # Check if containers are running
 docker compose -f docker/docker-compose.yml ps
@@ -111,16 +164,19 @@ docker compose -f docker/docker-compose.yml down
 docker compose -f docker/docker-compose.yml up -d
 ```
 
-### Forgot password?
-```bash
-# Restart Grafana (resets to admin/admin123)
-docker compose -f docker/docker-compose.yml restart grafana
+### Prometheus Target Missing?
 
-# For Pi-hole, check .env file for password
-Get-Content .env
+```bash
+# Check Prometheus logs
+docker compose -f docker/docker-compose.yml logs prometheus
+
+# Check exporter logs
+docker compose -f docker/docker-compose.yml logs node-exporter
+docker compose -f docker/docker-compose.yml logs cadvisor
 ```
 
-### Container crashed?
+### Container Crashed?
+
 ```bash
 # See what happened
 docker compose -f docker/docker-compose.yml logs pihole
@@ -131,10 +187,11 @@ docker compose -f docker/docker-compose.yml restart pihole
 
 ## Next Steps
 
-Once comfortable with these 4 services, you can:
-- Add more containers (try adding a web server)
-- Create Grafana dashboards
+Once comfortable with these services, you can:
+
+- Create richer Grafana dashboards from Node Exporter and cAdvisor metrics
 - Set up Pi-hole filtering rules
+- Add a Pi-hole v6 metrics exporter
 - Explore Docker networking
 - Build your own container
 
@@ -144,5 +201,4 @@ Once comfortable with these 4 services, you can:
 - [Docker Compose Guide](https://docs.docker.com/compose/)
 - [Pi-hole Docs](https://docs.pi-hole.net/)
 - [Grafana Docs](https://grafana.com/docs/grafana/latest/)
-
-
+- [Prometheus Docs](https://prometheus.io/docs/)

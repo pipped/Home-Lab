@@ -22,9 +22,13 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9323']
 
-  - job_name: 'node'
+  - job_name: 'node-exporter'
     static_configs:
-      - targets: ['localhost:9100']
+      - targets: ['node-exporter:9100']
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
 
   # Pi-hole v6 no longer exposes the old unauthenticated /admin/api.php endpoint.
   # Its current /api endpoints return authenticated JSON, so Prometheus needs

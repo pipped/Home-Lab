@@ -18,6 +18,7 @@ Access the services:
 - Grafana: `http://localhost:3000`
 - Prometheus: `http://localhost:9090`
 - Pi-hole: `http://localhost/admin`
+- cAdvisor: `http://localhost:8080`
 
 ## What's Included
 
@@ -25,6 +26,8 @@ Access the services:
 - Pi-hole: DNS-based ad blocking and query visibility
 - Prometheus: Metrics collection and storage
 - Grafana: Dashboards and visualization
+- Node Exporter: host CPU, memory, disk, and network metrics
+- cAdvisor: per-container CPU, memory, filesystem, and network metrics
 
 ## Credentials
 
@@ -37,13 +40,15 @@ Access the services:
 This repo currently provisions:
 
 - a working Docker Compose stack in `docker/docker-compose.yml`
+- host metrics through Node Exporter
+- container metrics through cAdvisor
 - a Prometheus datasource in Grafana
 - a starter Grafana dashboard at `Home Lab -> Home Lab Overview`
 
 Known limitations:
 
 - Pi-hole v6 no longer exposes the old unauthenticated `/admin/api.php` endpoint, so Pi-hole metrics are not scraped directly by Prometheus in this repo
-- the `docker` and `node` Prometheus jobs are placeholders until exporters are added
+- the `docker` Prometheus job is a placeholder until Docker's native metrics endpoint is enabled
 
 More detail: [docs/STATUS.md](docs/STATUS.md)
 
@@ -102,4 +107,5 @@ Home-Lab/
 - Explore Portainer to see the containers and volumes
 - Open Prometheus and run the `up` query
 - Open Grafana and view `Home Lab Overview`
-- Add exporters if you want host, Docker, or Pi-hole metrics beyond the starter setup
+- Use cAdvisor and Node Exporter metrics to build richer Grafana panels
+- Add a Pi-hole v6 exporter if you want Pi-hole stats in Grafana

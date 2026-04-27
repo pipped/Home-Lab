@@ -60,6 +60,41 @@ services:
     networks:
       - labnet
 
+  # NODE EXPORTER - Host machine metrics for Prometheus
+  # Access: scraped by Prometheus at http://node-exporter:9100
+  # Purpose: Track host CPU, memory, disk, and network metrics
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: always
+    command:
+      - '--path.rootfs=/host'
+    volumes:
+      - /:/host:ro,rslave
+    networks:
+      - labnet
+
+  # CADVISOR - Container resource metrics for Prometheus
+  # Access: http://localhost:8080
+  # Purpose: Track per-container CPU, memory, filesystem, and network metrics
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    networks:
+      - labnet
+
   # GRAFANA - Make cool dashboards from metrics
   # Access: http://localhost:3000 (admin/admin123)
   # Purpose: Create visualizations and alerts from Prometheus data

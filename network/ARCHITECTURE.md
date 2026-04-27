@@ -4,102 +4,100 @@ This is a simple, local Docker-based lab. Everything runs on your computer.
 
 ## Simple Architecture
 
-```
+```text
 Your Computer
-├── Port 9000  → Portainer (Container Management)
-├── Port 80    → Pi-hole (DNS Blocking)
-├── Port 9090  → Prometheus (Metrics Database)
-└── Port 3000  → Grafana (Dashboards)
+|- Port 9000 -> Portainer (container management)
+|- Port 80   -> Pi-hole (DNS blocking UI)
+|- Port 53   -> Pi-hole (DNS)
+|- Port 9090 -> Prometheus (metrics database)
+|- Port 3000 -> Grafana (dashboards)
+\- Port 8080 -> cAdvisor (container metrics UI)
 ```
 
 ## How They Talk to Each Other
 
-```
-Grafana (3000)
-   └─→ Asks Prometheus for data
-       
-Prometheus (9090)
-   └─→ Stores metrics from containers
-   
-Portainer (9000)
-   └─→ Shows you all containers
-   
-Pi-hole (80)
-   └─→ Blocks ad DNS requests
-   └─→ Exposes metrics to Prometheus
+```text
+Grafana
+  \- reads metrics from Prometheus
+
+Prometheus
+  |- scrapes itself at prometheus:9090
+  |- scrapes host metrics from node-exporter:9100
+  \- scrapes container metrics from cadvisor:8080
+
+Portainer
+  \- manages Docker through the Docker socket
+
+Pi-hole
+  |- blocks DNS requests on port 53
+  \- serves its admin UI on port 80
 ```
 
 ## Data Flow Example
 
 ### When You View a Grafana Dashboard
 
+```text
+1. You open Grafana.
+2. Grafana asks Prometheus for time-series data.
+3. Prometheus returns metrics collected from exporters.
+4. Grafana draws the dashboard panels.
 ```
-1. You open Grafana
-   ↓
-2. Grafana asks Prometheus: "How much memory is being used?"
-   ↓
-3. Prometheus checks its database: "Container used 500MB 5 mins ago, 512MB now"
-   ↓
-4. Prometheus returns data to Grafana
-   ↓
-5. Grafana draws a pretty graph
-   ↓
-6. You see the line going up and down
+
+### When Prometheus Collects Metrics
+
+```text
+1. Prometheus wakes up every 15 seconds.
+2. It scrapes Node Exporter for host metrics.
+3. It scrapes cAdvisor for container metrics.
+4. It stores the samples in its local time-series database.
 ```
 
 ### When Pi-hole Blocks an Ad
 
-```
-1. Your browser tries to load an ad domain
-   ↓
-2. Browser asks Pi-hole (DNS): "Where is ads.badsite.com?"
-   ↓
-3. Pi-hole checks its blocklist: "That's an ad! Block it."
-   ↓
-4. Pi-hole doesn't respond / returns empty
-   ↓
-5. Browser never loads the ad
-   ↓
-6. You see "Ad blocked" in Pi-hole admin
+```text
+1. A device asks Pi-hole to resolve a domain.
+2. Pi-hole checks its blocklists.
+3. If the domain is blocked, Pi-hole blocks or null-routes the answer.
+4. The blocked query appears in the Pi-hole admin UI.
 ```
 
 ## Port Explanation
 
-```
-Port 80    = HTTP (web)
-Port 9000  = Portainer web interface
-Port 3000  = Grafana web interface
-Port 9090  = Prometheus web interface
-Port 53    = DNS (internal, not accessible)
-```
-
-## Storage (Volumes)
-
-Each service saves data so it doesn't lose everything when you restart:
-
-```
-portainer_data     → Portainer settings
-pihole_data        → Pi-hole blocklists & config
-prometheus_data    → All collected metrics
-grafana_data       → Your dashboards & alerts
+```text
+Port 53   = DNS queries handled by Pi-hole
+Port 80   = Pi-hole web interface
+Port 9000 = Portainer web interface
+Port 3000 = Grafana web interface
+Port 9090 = Prometheus web interface
+Port 8080 = cAdvisor web interface
 ```
 
-## Network Name: "labnet"
+## Storage
 
-All containers are connected to a Docker network called `labnet`. This lets them talk to each other:
+Services that need persistent state use Docker volumes:
 
-- Grafana talks to Prometheus on: `http://prometheus:9090`
-- Prometheus talks to Pi-hole on: `http://pihole:80`
-- Etc.
+```text
+portainer_data  -> Portainer settings
+pihole_data     -> Pi-hole config and blocklists
+pihole_dnsmasq  -> Pi-hole DNS config
+prometheus_data -> collected metrics
+grafana_data    -> dashboards, alerts, and Grafana state
+```
 
----
+Node Exporter and cAdvisor are mostly metric readers, so they do not need persistent volumes.
+
+## Network Name: `labnet`
+
+All containers are connected to a Docker bridge network called `labnet`. This lets containers reach each other by service name:
+
+- Grafana talks to Prometheus at `http://prometheus:9090`
+- Prometheus talks to Node Exporter at `http://node-exporter:9100`
+- Prometheus talks to cAdvisor at `http://cadvisor:8080`
 
 ## Summary
 
-✓ **Simple**: 4 services running locally  
-✓ **Connected**: All talk to each other  
-✓ **Persistent**: Data saved in volumes  
-✓ **Learning**: Great for understanding Docker & monitoring  
-
-That's it! No complex network setup, no VMs, no firewall rules.
-
+- Simple: runs locally with Docker Compose
+- Connected: services share the `labnet` Docker network
+- Persistent: important app data is saved in Docker volumes
+- Observable: host and container metrics now flow into Prometheus

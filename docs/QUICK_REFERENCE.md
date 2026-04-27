@@ -35,6 +35,7 @@ docker compose -f docker/docker-compose.yml logs grafana
 | **Grafana** | http://localhost:3000 |
 | **Prometheus** | http://localhost:9090 |
 | **Pi-hole** | http://localhost/admin |
+| **cAdvisor** | http://localhost:8080 |
 
 ---
 
@@ -153,11 +154,14 @@ On your computer:
    - Pi-hole: http://localhost/admin
    - Prometheus: http://localhost:9090
    - Grafana: http://localhost:3000
+   - cAdvisor: http://localhost:8080
 
 3. **Try basic tasks**
    - Change passwords
    - View Pi-hole stats
    - Create a Prometheus query
+   - Check host metrics with `node_uname_info`
+   - Check container metrics with `container_memory_usage_bytes`
    - Open the `Home Lab Overview` Grafana dashboard
 
 4. **Experiment**

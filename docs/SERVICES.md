@@ -74,9 +74,70 @@ prometheus_tsdb_head_series
 rate(prometheus_http_requests_total[5m])
 ```
 
+### Good Exporter Queries
+
+**Host CPU**
+```promql
+rate(node_cpu_seconds_total[5m])
+```
+
+**Container memory**
+```promql
+container_memory_usage_bytes
+```
+
+**Container CPU**
+```promql
+rate(container_cpu_usage_seconds_total[5m])
+```
+
 ### Important Note
 
-Prometheus is working, but this repo does not yet include a node exporter, Docker exporter, or Pi-hole v6 exporter. That means the starter setup is best for learning the flow first, not for full host monitoring yet.
+Prometheus is working and now scrapes Node Exporter and cAdvisor. The `docker` scrape job is still a placeholder until Docker's native metrics endpoint is enabled, and Pi-hole metrics still need a Pi-hole v6 compatible exporter.
+
+---
+
+## Node Exporter - Host Metrics
+
+**URL**: scraped internally at `http://node-exporter:9100`  
+**Purpose**: Exposes host machine metrics to Prometheus
+
+### What You Can See
+
+- CPU usage
+- Memory usage
+- Disk and filesystem stats
+- Network stats
+- System load and uptime
+
+### Getting Started
+
+1. Open Prometheus at `http://localhost:9090`
+2. Go to `Status -> Target health`
+3. Confirm `node-exporter` is up
+4. Try the query `node_uname_info`
+
+---
+
+## cAdvisor - Container Metrics
+
+**URL**: http://localhost:8080  
+**Purpose**: Exposes per-container resource metrics to Prometheus
+
+### What You Can See
+
+- Container CPU usage
+- Container memory usage
+- Container filesystem activity
+- Container network traffic
+- Container labels and metadata
+
+### Getting Started
+
+1. Open cAdvisor at `http://localhost:8080`
+2. Open Prometheus at `http://localhost:9090`
+3. Confirm the `cadvisor` target is up
+4. Try the query `container_memory_usage_bytes`
 
 ---
 
@@ -113,10 +174,17 @@ Your browser
   +-- Portainer (9000)
   +-- Pi-hole (80 for UI, 53 for DNS)
   +-- Prometheus (9090)
+  +-- cAdvisor (8080)
   \-- Grafana (3000)
         |
         \-- reads data from Prometheus
 ```
+
+Prometheus scrapes:
+
+- itself at `prometheus:9090`
+- Node Exporter at `node-exporter:9100`
+- cAdvisor at `cadvisor:8080`
 
 ---
 
@@ -143,4 +211,5 @@ docker volume ls
 1. Explore Portainer to inspect the running stack.
 2. Open Prometheus and run `up`.
 3. Open Grafana and review `Home Lab Overview`.
-4. Add exporters later if you want richer host or Pi-hole metrics.
+4. Build Grafana panels from Node Exporter and cAdvisor metrics.
+5. Add a Pi-hole v6 exporter later if you want Pi-hole stats in Grafana.
