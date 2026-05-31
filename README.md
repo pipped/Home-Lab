@@ -1,6 +1,6 @@
 # Home Lab - Docker Learning Environment
 
-A small Docker-based home lab for learning container basics, DNS filtering, metrics collection, and dashboards.
+A Docker-based home lab for learning container management, DNS filtering, metrics collection, uptime monitoring, and reverse proxying.
 
 ## Quick Start
 
@@ -8,49 +8,49 @@ A small Docker-based home lab for learning container basics, DNS filtering, metr
 # 1. Copy the environment template
 cp .env.example .env
 
-# 2. Start the lab
+# 2. Edit .env and set your passwords
+nano .env
+
+# 3. Start the stack
 docker compose -f docker/docker-compose.yml up -d
 ```
 
-Access the services:
+## Services
 
-- Portainer: `http://localhost:9000`
-- Grafana: `http://localhost:3000`
-- Prometheus: `http://localhost:9090`
-- Pi-hole: `http://localhost/admin`
-- cAdvisor: `http://localhost:8080`
-
-## What's Included
-
-- Portainer: Docker container management UI
-- Pi-hole: DNS-based ad blocking and query visibility
-- Prometheus: Metrics collection and storage
-- Grafana: Dashboards and visualization
-- Node Exporter: host CPU, memory, disk, and network metrics
-- cAdvisor: per-container CPU, memory, filesystem, and network metrics
+| Service | Purpose | Access |
+|---|---|---|
+| Portainer | Container management UI | http://localhost:9000 |
+| Pi-hole | DNS-based ad blocking | http://localhost:8081/admin |
+| Prometheus | Metrics collection | http://localhost:9090 |
+| Grafana | Dashboards and visualization | http://localhost:3000 |
+| Uptime Kuma | Service uptime monitoring | http://localhost:3001 |
+| Nginx Proxy Manager | Reverse proxy with SSL | http://localhost:81 (admin) |
+| cAdvisor | Per-container metrics | http://localhost:8080 |
+| Node Exporter | Host metrics (scraped by Prometheus) | — |
+| Pi-hole Exporter | Pi-hole metrics for Prometheus | — |
 
 ## Credentials
 
-- Grafana: `admin` / `GF_SECURITY_ADMIN_PASSWORD` from `.env`
-- Pi-hole: `admin` / `PIHOLE_PASSWORD` from `.env`
-- Portainer: set an admin password on first login
+| Service | Username | Password |
+|---|---|---|
+| Grafana | `admin` | `GF_SECURITY_ADMIN_PASSWORD` from `.env` |
+| Pi-hole | `admin` | `PIHOLE_PASSWORD` from `.env` |
+| Nginx Proxy Manager | `admin@example.com` | `changeme` (change on first login) |
+| Portainer | set on first login | — |
 
-## Current State
+## Grafana Dashboards
 
-This repo currently provisions:
+Open Grafana at http://localhost:3000 and navigate to **Home Lab → Home Lab Overview**.
 
-- a working Docker Compose stack in `docker/docker-compose.yml`
-- host metrics through Node Exporter
-- container metrics through cAdvisor
-- a Prometheus datasource in Grafana
-- a starter Grafana dashboard at `Home Lab -> Home Lab Overview`
-
-Known limitations:
-
-- Pi-hole v6 no longer exposes the old unauthenticated `/admin/api.php` endpoint, so Pi-hole metrics are not scraped directly by Prometheus in this repo
-- the `docker` Prometheus job is a placeholder until Docker's native metrics endpoint is enabled
-
-More detail: [docs/STATUS.md](docs/STATUS.md)
+Panels included:
+- CPU, memory, and disk gauges
+- System uptime and load average
+- Services up count
+- CPU and memory time series
+- Network I/O and disk I/O
+- Per-container CPU and memory
+- Container status table
+- Pi-hole: queries today, ads blocked, block rate, blocklist size
 
 ## Useful Commands
 
@@ -61,51 +61,56 @@ docker compose -f docker/docker-compose.yml up -d
 # Check status
 docker compose -f docker/docker-compose.yml ps
 
-# View logs
+# View all logs
 docker compose -f docker/docker-compose.yml logs -f
+
+# View logs for one service
+docker compose -f docker/docker-compose.yml logs -f grafana
 
 # Restart one service
 docker compose -f docker/docker-compose.yml restart grafana
 
+# Pull latest images and recreate
+docker compose -f docker/docker-compose.yml pull
+docker compose -f docker/docker-compose.yml up -d
+
 # Stop everything
 docker compose -f docker/docker-compose.yml down
+
+# Stop and remove volumes (full reset)
+docker compose -f docker/docker-compose.yml down -v
 ```
 
 ## Repository Layout
 
-```text
+```
 Home-Lab/
-|- docker/
-|  \- docker-compose.yml
-|- configs/
-|  |- prometheus.yml
-|  \- grafana/
-|- docs/
-|  |- SETUP.md
-|  |- SERVICES.md
-|  |- QUICK_REFERENCE.md
-|  |- TROUBLESHOOTING.md
-|  \- STATUS.md
-|- network/
-|  \- ARCHITECTURE.md
-|- .env.example
-|- .gitignore
-\- README.md
+├── docker/
+│   └── docker-compose.yml
+├── configs/
+│   ├── prometheus.yml
+│   └── grafana/
+│       └── provisioning/
+│           ├── datasources/
+│           └── dashboards/
+│               └── json/
+├── docs/
+│   ├── SETUP.md
+│   ├── SERVICES.md
+│   ├── QUICK_REFERENCE.md
+│   ├── TROUBLESHOOTING.md
+│   └── STATUS.md
+├── network/
+│   └── ARCHITECTURE.md
+├── .env.example
+└── README.md
 ```
 
 ## Documentation
 
-- [docs/SETUP.md](docs/SETUP.md): setup walkthrough
-- [docs/SERVICES.md](docs/SERVICES.md): what each service does
-- [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md): common commands
-- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md): common problems and fixes
-- [docs/STATUS.md](docs/STATUS.md): current monitoring and dashboard status
-- [network/ARCHITECTURE.md](network/ARCHITECTURE.md): service relationships
-
-## Next Steps
-
-- Explore Portainer to see the containers and volumes
-- Open Prometheus and run the `up` query
-- Open Grafana and view `Home Lab Overview`
-- Use cAdvisor and Node Exporter metrics to build richer Grafana panels
-- Add a Pi-hole v6 exporter if you want Pi-hole stats in Grafana
+- [docs/SETUP.md](docs/SETUP.md) — setup walkthrough
+- [docs/SERVICES.md](docs/SERVICES.md) — what each service does
+- [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md) — common commands
+- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — common problems and fixes
+- [docs/STATUS.md](docs/STATUS.md) — current monitoring status
+- [network/ARCHITECTURE.md](network/ARCHITECTURE.md) — service relationships

@@ -1,10 +1,7 @@
-# Simple home lab with 4 core services for learning
-# No complex configuration needed - just works out of the box!
-
 services:
-  # PORTAINER - Easy container management UI
+
+  # PORTAINER - Container management UI
   # Access: http://localhost:9000
-  # Purpose: Visually manage Docker containers, images, and volumes
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
@@ -17,9 +14,8 @@ services:
     networks:
       - labnet
 
-  # PI-HOLE - Ad blocking DNS server
-  # Access: http://localhost/admin (password: changeme123)
-  # Purpose: Filter ads and track DNS queries for the network
+  # PI-HOLE - DNS ad blocker
+  # Access: http://localhost:8081/admin
   pihole:
     image: pihole/pihole:latest
     container_name: pihole
@@ -27,7 +23,7 @@ services:
     ports:
       - "53:53/tcp"
       - "53:53/udp"
-      - "80:80"
+      - "8081:80"
     environment:
       TZ: ${TZ:-America/New_York}
       FTLCONF_webserver_api_password: ${PIHOLE_PASSWORD:-changeme123}
@@ -42,9 +38,25 @@ services:
     cap_add:
       - NET_ADMIN
 
-  # PROMETHEUS - Collect metrics about your services
+  # PI-HOLE EXPORTER - Prometheus metrics for Pi-hole v6
+  # Scraped by Prometheus at http://pihole-exporter:9617/metrics
+  pihole-exporter:
+    image: ekofr/pihole-exporter:latest
+    container_name: pihole-exporter
+    restart: always
+    environment:
+      PIHOLE_HOSTNAME: pihole
+      PIHOLE_PASSWORD: ${PIHOLE_PASSWORD:-changeme123}
+      PIHOLE_PORT: 80
+      INTERVAL: 30s
+      PORT: 9617
+    depends_on:
+      - pihole
+    networks:
+      - labnet
+
+  # PROMETHEUS - Metrics collection
   # Access: http://localhost:9090
-  # Purpose: Store and track system metrics (CPU, memory, etc.)
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -57,12 +69,12 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
     networks:
       - labnet
 
-  # NODE EXPORTER - Host machine metrics for Prometheus
-  # Access: scraped by Prometheus at http://node-exporter:9100
-  # Purpose: Track host CPU, memory, disk, and network metrics
+  # NODE EXPORTER - Host machine metrics
+  # Scraped by Prometheus at http://node-exporter:9100
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
@@ -74,9 +86,8 @@ services:
     networks:
       - labnet
 
-  # CADVISOR - Container resource metrics for Prometheus
+  # CADVISOR - Per-container metrics
   # Access: http://localhost:8080
-  # Purpose: Track per-container CPU, memory, filesystem, and network metrics
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
@@ -95,9 +106,8 @@ services:
     networks:
       - labnet
 
-  # GRAFANA - Make cool dashboards from metrics
-  # Access: http://localhost:3000 (admin/admin123)
-  # Purpose: Create visualizations and alerts from Prometheus data
+  # GRAFANA - Dashboards and visualization
+  # Access: http://localhost:3000 (admin / GF_SECURITY_ADMIN_PASSWORD)
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -115,7 +125,37 @@ services:
     networks:
       - labnet
 
-# Network and storage
+  # UPTIME KUMA - Service uptime monitoring
+  # Access: http://localhost:3001
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    restart: always
+    ports:
+      - "3001:3001"
+    volumes:
+      - uptime_kuma_data:/app/data
+    networks:
+      - labnet
+
+  # NGINX PROXY MANAGER - Reverse proxy with SSL
+  # Admin UI: http://localhost:81 (admin@example.com / changeme)
+  # HTTP:     http://localhost:80
+  # HTTPS:    https://localhost:443
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    restart: always
+    ports:
+      - "80:80"
+      - "81:81"
+      - "443:443"
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+    networks:
+      - labnet
+
 networks:
   labnet:
     driver: bridge
@@ -126,3 +166,6 @@ volumes:
   pihole_dnsmasq:
   prometheus_data:
   grafana_data:
+  uptime_kuma_data:
+  npm_data:
+  npm_letsencrypt:
